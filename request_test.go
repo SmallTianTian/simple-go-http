@@ -516,7 +516,7 @@ func TestRequest_Context(t *testing.T) {
 }
 
 func TestRequest_build(t *testing.T) {
-	var oldHeader http.Header
+	oldHeader := make(http.Header)
 	oldHeader.Set("Content-Type", "application/json")
 
 	type XMlContent struct {
@@ -602,6 +602,22 @@ func TestRequest_build(t *testing.T) {
 			wantUrl:    "",
 			wantHeader: http.Header{"Content-Type": []string{"application/xml"}},
 			wantBody:   []byte(`<XMlContent><key>value</key></XMlContent>`),
+		},
+		{
+			name:       "url query accept number",
+			fields:     fields{RequestType: UrlQuery, Method: GET, Body: map[string]interface{}{"number": 1.234}, URL: "http://example.com?test=hello"},
+			wantMethod: GET,
+			wantUrl:    `http://example.com?test=hello&number=1.234`,
+			wantHeader: http.Header{},
+			wantBody:   nil,
+		},
+		{
+			name:       "url query accept struct",
+			fields:     fields{RequestType: UrlQuery, Method: GET, Body: map[string]interface{}{"struct": map[string]string{"sk": "sv"}}, URL: "http://example.com?test=hello"},
+			wantMethod: GET,
+			wantUrl:    `http://example.com?test=hello&struct={"sk":"sv"}`,
+			wantHeader: http.Header{},
+			wantBody:   nil,
 		},
 	}
 	for _, tt := range tests {

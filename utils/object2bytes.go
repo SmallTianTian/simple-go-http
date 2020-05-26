@@ -17,13 +17,21 @@ func Struct2Xml(obj interface{}) []byte {
 }
 
 func Struct2UrlQuery(obj interface{}) []byte {
-	var m map[string]string
+	var m map[string]interface{}
 	json.Unmarshal(Struct2Json(obj), &m)
 	bb := bytes.Buffer{}
 	for k, v := range m {
 		bb.WriteString(k)
 		bb.WriteString("=")
-		bb.WriteString(v)
+		var valueStr string
+		switch v.(type) {
+		case string:
+			valueStr = v.(string)
+		default:
+			vbs, _ := json.Marshal(v)
+			valueStr = string(vbs)
+		}
+		bb.WriteString(valueStr)
 		bb.WriteString("&")
 	}
 	return bb.Bytes()[:bb.Len()-1]
