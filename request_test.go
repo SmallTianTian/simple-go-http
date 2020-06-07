@@ -139,6 +139,7 @@ func TestRequest_Post(t *testing.T) {
 		Ctx         context.Context
 	}
 	type args struct {
+		url  string
 		body interface{}
 	}
 	tests := []struct {
@@ -152,6 +153,16 @@ func TestRequest_Post(t *testing.T) {
 			fields: fields{},
 			args:   args{body: postString},
 			want: &Request{
+				Method: POST,
+				Body:   postString,
+			},
+		},
+		{
+			name:   "Post url string",
+			fields: fields{},
+			args:   args{url: "https://example.com", body: postString},
+			want: &Request{
+				URL:    "https://example.com",
 				Method: POST,
 				Body:   postString,
 			},
@@ -185,7 +196,7 @@ func TestRequest_Post(t *testing.T) {
 				RequestType: tt.fields.RequestType,
 				Ctx:         tt.fields.Ctx,
 			}
-			if got := req.Post(tt.args.body); !reflect.DeepEqual(got, tt.want) {
+			if got := req.Post(tt.args.url, tt.args.body); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Request.Post() = %v, want %v", got, tt.want)
 			}
 		})
@@ -583,17 +594,16 @@ func TestRequest_build(t *testing.T) {
 			name:       "post use url query body.",
 			fields:     fields{RequestType: UrlQuery, Method: POST, Body: map[string]string{"key": "value"}},
 			wantMethod: POST,
-			wantUrl:    "?key=value",
 			wantHeader: http.Header{},
-			wantBody:   nil,
+			wantBody:   []byte(`key=value`),
 		},
 		{
-			name:       "post use url query body AND append to url.",
+			name:       "post use url query body NOT append to url.",
 			fields:     fields{RequestType: UrlQuery, Method: POST, Body: map[string]string{"key": "value"}, URL: "http://example.com?test=hello"},
 			wantMethod: POST,
-			wantUrl:    "http://example.com?test=hello&key=value",
+			wantUrl:    "http://example.com?test=hello",
 			wantHeader: http.Header{},
-			wantBody:   nil,
+			wantBody:   []byte(`key=value`),
 		},
 		{
 			name:       "use xml body",
@@ -619,6 +629,52 @@ func TestRequest_build(t *testing.T) {
 			wantHeader: http.Header{},
 			wantBody:   nil,
 		},
+		{
+			name: "Set xml request type will reset post default type.",
+			fields: fields{
+				Method:      POST,
+				Body:        XMlContent{Key: "value"},
+				RequestType: Xml,
+			},
+			wantMethod: POST,
+			wantHeader: http.Header{"Content-Type": []string{"application/xml"}},
+			wantBody:   []byte(`<XMlContent><key>value</key></XMlContent>`),
+		},
+		{
+			name: "Set urlquery request type will reset post default type..",
+			fields: fields{
+				Method:      POST,
+				Body:        map[string]string{"key": "value"},
+				RequestType: UrlQuery,
+			},
+			wantMethod: POST,
+			wantHeader: http.Header{},
+			wantBody:   []byte(`key=value`),
+		},
+		{
+			name:       "get method's string body",
+			fields:     fields{Method: GET, Body: "single"},
+			wantMethod: GET,
+			wantUrl:    "?single=",
+			wantHeader: http.Header{},
+			wantBody:   nil,
+		},
+		{
+			name:       "use string to post",
+			fields:     fields{Method: POST, Body: "this is string."},
+			wantMethod: POST,
+			wantUrl:    "",
+			wantHeader: http.Header{"Content-Type": []string{"application/json"}},
+			wantBody:   []byte(`this is string.`),
+		},
+		{
+			name:       "use string to xml post",
+			fields:     fields{Method: POST, Body: "this is string.", RequestType: Xml},
+			wantMethod: POST,
+			wantUrl:    "",
+			wantHeader: http.Header{"Content-Type": []string{"application/xml"}},
+			wantBody:   []byte(`this is string.`),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -642,6 +698,48 @@ func TestRequest_build(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gotBody, tt.wantBody) {
 				t.Errorf("Request.build() gotBody = %v, want %v", string(gotBody), string(tt.wantBody))
+			}
+		})
+	}
+}
+
+func TestRequest_SetRequestType(t *testing.T) {
+	type fields struct {
+		Method      HttpMethod
+		URL         string
+		Header      http.Header
+		Body        interface{}
+		RequestType BodyType
+		Ctx         context.Context
+	}
+	type args struct {
+		bt BodyType
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   *Request
+	}{
+		{
+			name:   "can set body type.",
+			fields: fields{RequestType: Json},
+			args:   args{bt: Xml},
+			want:   &Request{RequestType: Xml},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &Request{
+				Method:      tt.fields.Method,
+				URL:         tt.fields.URL,
+				Header:      tt.fields.Header,
+				Body:        tt.fields.Body,
+				RequestType: tt.fields.RequestType,
+				Ctx:         tt.fields.Ctx,
+			}
+			if got := req.SetRequestType(tt.args.bt); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Request.SetRequestType() = %v, want %v", got, tt.want)
 			}
 		})
 	}

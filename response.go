@@ -23,6 +23,6 @@ func NewJsonResponse(resultStruct interface{}) *Response {
 	return NewResponse(resultStruct, Json)
 }
 
-func NewXMLResponse(resultStruct interface{}) *Response {
+func NewXmlResponse(resultStruct interface{}) *Response {
 	return NewResponse(resultStruct, Xml)
 }

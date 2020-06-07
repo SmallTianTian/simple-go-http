@@ -25,9 +25,8 @@ func NewRequest(opts ...func(*Request)) *Request {
 	return req
 }
 
-func (req *Request) Post(body interface{}) *Request {
-	req.Body = body
-	return req.HttpMethod(POST)
+func (req *Request) Post(url string, body interface{}) *Request {
+	return req.HttpMethod(POST).Url(url).HttpBody(body)
 }
 
 func (req *Request) Get(url string) *Request {
@@ -59,6 +58,11 @@ func (req *Request) SetHeader(key, value string) *Request {
 
 func (req *Request) Context(ctx context.Context) *Request {
 	req.Ctx = ctx
+	return req
+}
+
+func (req *Request) SetRequestType(bt BodyType) *Request {
+	req.RequestType = bt
 	return req
 }
 
@@ -97,10 +101,14 @@ func (req *Request) build() (method HttpMethod, url string, header http.Header, 
 		header.Set("Content-Type", "application/xml")
 	case UrlQuery:
 		query := utils.Struct2UrlQuery(req.Body)
-		if strings.Contains(req.URL, "?") {
-			url += "&" + string(query)
+		if req.Method == GET {
+			if strings.Contains(req.URL, "?") {
+				url += "&" + string(query)
+			} else {
+				url += "?" + string(query)
+			}
 		} else {
-			url += "?" + string(query)
+			body = query
 		}
 	}
 	return
