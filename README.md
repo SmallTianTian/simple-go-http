@@ -20,6 +20,7 @@ go get github.com/SmallTianTian/simple-go-http
 [基础用法](#基础用法)
 [请求/响应默认行为](#请求/响应默认行为)
 [添加钩子](#添加钩子)
+[辅助调试](#辅助调试)
 
 ### 基础用法
 
@@ -157,4 +158,10 @@ client.NewRequest()
 
 // resp:
 // header: hook:value
+```
+
+### 辅助调试
+
+```golang
+client.OpenDebug() // 开启 Debug 调试信息
 ```
