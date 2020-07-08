@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/SmallTianTian/simple-go-http/utils"
 )
@@ -14,6 +15,7 @@ type Request struct {
 	Header      http.Header
 	Body        interface{}
 	RequestType BodyType
+	Timeout     time.Duration
 	Ctx         context.Context
 }
 
@@ -63,6 +65,11 @@ func (req *Request) Context(ctx context.Context) *Request {
 
 func (req *Request) SetRequestType(bt BodyType) *Request {
 	req.RequestType = bt
+	return req
+}
+
+func (req *Request) SetTimeout(t time.Duration) *Request {
+	req.Timeout = t
 	return req
 }
 

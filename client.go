@@ -38,7 +38,12 @@ func (sc *SimpleClient) Do(req *Request, resp *Response, opts ...func(*Request, 
 	defer fasthttp.ReleaseResponse(rp)
 	request2fastRequest(req, rq)
 
-	if err := sc.client.DoTimeout(rq, rp, sc.timeout); err != nil {
+	timeout := sc.timeout
+	if req.Timeout != 0 {
+		timeout = req.Timeout
+	}
+
+	if err := sc.client.DoTimeout(rq, rp, timeout); err != nil {
 		return err
 	}
 	if err := fastResponse2Response(rp, resp); err != nil {

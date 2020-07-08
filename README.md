@@ -94,6 +94,20 @@ client.NewRequest()
       .Do(client.NewJsonResponse(&res)) // res{RespKey: "this is fake"}
 ```
 
+#### 7. 为 `Request` 设置单独的 timeout
+
+```golang
+var res struct {
+    RespKey string `json:"resp_key"`
+}
+
+// 1. json response
+client.NewRequest()
+      .Post("https://example.com", nil) // will return `{"resp_key": "this is fake"}`
+      .Timeout(3 * time.Second)
+      .Do(client.NewJsonResponse(&res)) // res{RespKey: "this is fake"}
+```
+
 ### 请求/响应默认行为
 
 #### 1. 利用 HttpMethod 的默认功能
