@@ -74,7 +74,6 @@ func (req *Request) SetTimeout(t time.Duration) *Request {
 }
 
 func (req *Request) build() (method HttpMethod, url string, header http.Header, body []byte) {
-	defer func() { reqFormatPrint(method, url, header, body) }()
 	method = req.Method
 	url = req.URL
 	if req.Header == nil {
@@ -122,32 +121,6 @@ func (req *Request) build() (method HttpMethod, url string, header http.Header, 
 	return
 }
 
-func (req *Request) Do(resp *Response, opts ...func(*Request, *Response)) error {
+func (req *Request) Do(resp *Response, opts ...Handler) error {
 	return defaultClient.Do(req, resp, opts...)
-}
-
-func reqFormatPrint(method HttpMethod, url string, header http.Header, body []byte) {
-	if !debug {
-		return
-	}
-
-	sb := strings.Builder{}
-
-	sb.WriteString("==== http request info ====\n")
-	sb.WriteString(method.String())
-	sb.WriteString(" ")
-	sb.WriteString(url)
-	sb.WriteString("\n")
-	for k := range header {
-		sb.WriteString(k)
-		sb.WriteString(": ")
-		sb.WriteString(header.Get(k))
-		sb.WriteString("\n")
-	}
-	if len(body) > 0 {
-		sb.WriteString("\n")
-		sb.Write(body)
-		sb.WriteString("\n")
-	}
-	print(sb.String())
 }

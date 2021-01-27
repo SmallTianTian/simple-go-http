@@ -46,4 +46,9 @@ const (
 	Json
 	Xml
 	UrlQuery
+
+	// NOT USE IN REQUEST
+	Excel
+	JsonP
+	CSV
 )
